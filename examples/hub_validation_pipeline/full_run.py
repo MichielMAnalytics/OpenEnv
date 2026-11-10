@@ -260,7 +260,7 @@ def run(
         manifest["stage"] = "budget"
         manifest["estimate"] = estimate(configs)
         manifest["within_budget"] = (
-            Fraction(manifest["estimate"]["reservation_usd_exact"]) <= cap
+            Fraction(manifest["estimate"]["reservation_usd_rounded_up"]) <= cap
         )
         manifest["status"] = "prepared"
         _write(manifest_path, manifest)

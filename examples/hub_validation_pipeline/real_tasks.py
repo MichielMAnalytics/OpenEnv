@@ -13,7 +13,7 @@ import re
 import stat
 import tempfile
 import tomllib
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from huggingface_hub import hf_hub_download, HfApi, RepoFile, RepoFolder
 from openenv.validation.runner import source_digest
@@ -54,7 +54,12 @@ def _load_panel(panel_path):
         if not isinstance(task, dict):
             raise ValueError("Panel tasks must be objects")
         name = cloud._safe_name(task.get("name", ""))
-        task_path = cloud._safe_name(task.get("task_path", ""))
+        raw_task_path = task.get("task_path", "")
+        task_path = (
+            PurePosixPath(".")
+            if raw_task_path == "."
+            else cloud._safe_name(raw_task_path)
+        )
         if (
             len(name.parts) != 1
             or name.as_posix().casefold() in names
@@ -103,7 +108,8 @@ def acquire_task(task, destination, *, source, api=None, download=None):
     """Acquire only one pinned native tree, with size and Git-blob checks."""
     revision = sources._pin(source["revision"], "hf")
     repo_id, task_path = source["repo_id"], task["task_path"]
-    cloud._safe_name(task_path)
+    if task_path != ".":
+        cloud._safe_name(task_path)
     destination = Path(destination)
     if destination.exists() or destination.is_symlink():
         raise FileExistsError("Acquisition requires a fresh task directory")
@@ -117,7 +123,7 @@ def acquire_task(task, destination, *, source, api=None, download=None):
     total = 0
     for item in api.list_repo_tree(
         repo_id,
-        path_in_repo=task_path,
+        path_in_repo=None if task_path == "." else task_path,
         repo_type="dataset",
         revision=revision,
         recursive=True,
