@@ -80,10 +80,10 @@ def source_files(name):
         "task.toml": (
             '[task]\nname = "toy/' + name + '"\n'
             "[agent]\ntimeout_sec = 900.0\n[verifier]\ntimeout_sec = 900.0\n"
-            '[environment]\ndocker_image = "example/' + name + ':fixture"\n'
-            "cpus = 1\nmemory_mb = 2048\nstorage_mb = 10240\ngpus = 0\n"
+            "[environment]\ncpus = 1\nmemory_mb = 2048\nstorage_mb = 10240\ngpus = 0\n"
         ).encode(),
         "instruction.md": b"Public task instruction\n",
+        "environment/Dockerfile": b"FROM python:3.12-slim\nWORKDIR /app\n",
         "solution/solve.sh": b"#!/bin/bash\necho native-reference\n",
         "tests/test.sh": b"#!/bin/bash\necho 0 > /logs/verifier/reward.txt\n",
         "tests/test_outputs.py": b"# native verifier asset\n",
@@ -170,7 +170,8 @@ def test_prepare_pinned_selected_native_trees_and_consumable_manifest(tmp_path):
             },
         }
         assert row["source_digest"] == source_digest(root)
-        assert row["source_image"].endswith(":fixture")
+        assert row["execution_image"] == task["image"]
+        assert "source_image" not in row
         assert row["evaluation_only"] is True
         for path, data in source_files(row["name"]).items():
             assert (root / path).read_bytes() == data

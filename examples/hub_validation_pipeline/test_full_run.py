@@ -238,6 +238,13 @@ def test_exact_aggregate_reservation_and_normalized_generator():
     assert all(isinstance(value, (str, int)) for value in result.values())
 
 
+def test_estimate_defaults_missing_execution_flavor_to_cpu_basic():
+    config = toy_config()
+    expected = full_run.estimate([config])
+    config["execution"].pop("flavor")
+    assert full_run.estimate([config]) == expected
+
+
 def test_operator_runtime_limits_drive_reservation():
     configs = [toy_config(name) for name in TOY_NAMES]
     base = full_run.estimate(configs)

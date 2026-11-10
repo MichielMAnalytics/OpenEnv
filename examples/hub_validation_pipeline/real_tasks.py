@@ -12,7 +12,6 @@ import json
 import re
 import stat
 import tempfile
-import tomllib
 from pathlib import Path
 
 from huggingface_hub import hf_hub_download, HfApi, RepoFile, RepoFolder
@@ -231,7 +230,6 @@ def _prepare(
         config_path.parent.mkdir(exist_ok=True)
         config_bytes = cloud._json_bytes(config)
         config_path.write_bytes(config_bytes)
-        native = tomllib.loads((task_root / "task.toml").read_text())
         source = {
             **panel["source"],
             "task_path": task["task_path"],
@@ -252,7 +250,6 @@ def _prepare(
             "evaluation_only": True,
             "negative_counterexamples": task["negative_counterexamples"],
             "annotations": task.get("annotations", {}),
-            "source_image": native["environment"]["docker_image"],
             "execution_image": task["image"],
             "budget": cloud._config(config)[1],
         }
