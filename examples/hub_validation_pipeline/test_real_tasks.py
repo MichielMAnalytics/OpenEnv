@@ -197,7 +197,12 @@ def test_prepare_pinned_selected_native_trees_and_consumable_manifest(tmp_path):
 def test_bundle_and_cli_pass_exact_preparation_contract(tmp_path, monkeypatch, capsys):
     api, download = hf_fakes()
     panel_path = write_panel(tmp_path)
-    prepare = Mock()
+
+    def write_plan(task_root, config, output, **kwargs):
+        output.mkdir(parents=True)
+        (output / "plan.json").write_text("{}")
+
+    prepare = Mock(side_effect=write_plan)
     monkeypatch.setattr(cloud, "prepare", prepare)
     monkeypatch.setattr(real_tasks, "HfApi", Mock(return_value=api))
     monkeypatch.setattr(real_tasks, "hf_hub_download", download)
@@ -219,6 +224,8 @@ def test_bundle_and_cli_pass_exact_preparation_contract(tmp_path, monkeypatch, c
     assert call.args[1]["cloud"]["results_repo"] == "example/results"
     assert call.kwargs["source"] == row["source"]
     assert row["bundle_plan"] == str(call.args[2] / "plan.json")
+    assert row["plan_path"] == "bundles/toy-alpha/plan.json"
+    assert row["plan_sha256"] == hashlib.sha256(b"{}").hexdigest()
     assert json.loads(capsys.readouterr().out)["status"] == "prepared"
 
 

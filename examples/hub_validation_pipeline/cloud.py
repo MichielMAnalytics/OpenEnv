@@ -391,6 +391,19 @@ def _bootstrap_main(uv_version):
         )
         stage = "sync"
         subprocess.run(["uv", "sync", "--frozen", "--no-dev"], cwd=root, check=True)
+        stage = "pin_huggingface_hub"
+        subprocess.run(
+            [
+                "uv",
+                "pip",
+                "install",
+                "--python",
+                str(root / ".venv/bin/python"),
+                "huggingface_hub==1.33.0",
+            ],
+            cwd=root,
+            check=True,
+        )
         stage = "worker"
         subprocess.run(
             [

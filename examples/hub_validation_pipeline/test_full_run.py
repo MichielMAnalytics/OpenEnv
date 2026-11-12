@@ -9,7 +9,13 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
-from examples.hub_validation_pipeline import cloud, full_run, real_tasks, spend
+from examples.hub_validation_pipeline import (
+    cloud,
+    full_run,
+    prepared_batch,
+    real_tasks,
+    spend,
+)
 from examples.hub_validation_pipeline.test_real_tasks import (
     toy_config,
     TOY_NAMES,
@@ -407,6 +413,19 @@ def test_prepare_only_freezes_small_summaries_and_hashes_inventories(local_run):
     assert inventories["compact_identity_inventory"]["status"] == "unavailable"
     assert manifest["catalogs"]["hf"]["counts"]["native_tasks"] == 7
     assert not (output.parent / "spend.json").exists()
+    for task in manifest["tasks"]:
+        assert task["plan_path"] == Path(task["plan"]).relative_to(output).as_posix()
+    batch = prepared_batch.run(
+        output / "manifest.json",
+        output.parent / "batch",
+        output.parent / "spend.json",
+        "reviewed-cohort",
+        "500",
+    )
+    assert batch["status"] == "prepared"
+    assert [task["plan_path"] for task in batch["tasks"]] == [
+        task["plan_path"] for task in manifest["tasks"]
+    ]
     with pytest.raises(FileExistsError):
         full_run.run(output, hf, harbor, "500", panel_path=output.parent / "panel.json")
     prepare.assert_called_once()

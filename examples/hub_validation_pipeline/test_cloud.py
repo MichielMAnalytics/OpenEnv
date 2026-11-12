@@ -328,7 +328,15 @@ def test_bootstrap_uses_pinned_download_and_frozen_sync(inputs, tmp_path, monkey
     calls = [call.args[0] for call in run.call_args_list]
     assert calls[0][-2:] == ["install", "uv==0.9.3"]
     assert calls[1] == ["uv", "sync", "--frozen", "--no-dev"]
-    assert calls[2][1:4] == ["-m", "examples.hub_validation_pipeline.cloud", "worker"]
+    assert calls[2] == [
+        "uv",
+        "pip",
+        "install",
+        "--python",
+        str(destination / "bundle/.venv/bin/python"),
+        "huggingface_hub==1.33.0",
+    ]
+    assert calls[3][1:4] == ["-m", "examples.hub_validation_pipeline.cloud", "worker"]
     assert (
         destination / "bundle/task/instruction.md"
     ).read_bytes() == b"Write an answer\n"

@@ -240,7 +240,8 @@ def run(
         configs = []
         manifest["stage"] = "plans"
         for row in recipes["tasks"]:
-            plan_sha256 = _hash(Path(row["bundle_plan"]))["sha256"]
+            plan_path = Path(row["bundle_plan"])
+            plan_sha256 = _hash(plan_path)["sha256"]
             plan, config, _, _ = cloud._read_plan(
                 row["bundle_plan"], expected_sha256=plan_sha256
             )
@@ -249,6 +250,7 @@ def run(
                 {
                     "task_id": row["task_id"],
                     "plan": row["bundle_plan"],
+                    "plan_path": plan_path.relative_to(output).as_posix(),
                     "plan_sha256": plan_sha256,
                     "run_id": plan["run_id"],
                     "bundle_sha256": plan["bundle_sha256"],
